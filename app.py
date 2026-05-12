@@ -225,6 +225,11 @@ df_all   = load_data()
 zone_sum = load_zone_summary()
 zone_gj  = load_zone_geojson()
 max_date = df_all["request_date"].max()
+# Drop stub final day if it has < 1% of a typical day's trips (partial data cutoff)
+_last_day_trips = df_all[df_all["request_date"] == max_date]["trip_count"].sum()
+_typical_trips  = df_all.groupby("request_date")["trip_count"].sum().median()
+if _last_day_trips < _typical_trips * 0.1:
+    max_date = max_date - timedelta(days=1)
 min_date = df_all["request_date"].min()
 weather  = load_weather(min_date.strftime("%Y-%m-%d"), max_date.strftime("%Y-%m-%d"))
 # Google Trends loaded lazily inside Tab 3 to avoid blocking startup
